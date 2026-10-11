@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Home | FraudGuard AI{% endblock %}
+
+{% block content %}
+<div class="container hero-section">
+    <div class="hero-badge">
+        <i class="fa-solid fa-microchip"></i> Machine Learning in Financial Cybersecurity
+    </div>
+    <h1 class="hero-title">FRAUDGUARD</h1>
+    <h2 class="hero-subtitle">Credit Card Fraud Detection Using Machine Learning</h2>
+    <p class="hero-description">
+        An intelligent detection system designed to identify fraudulent credit card transactions in real-time.
+        Trained on real-world European cardholder transaction data containing extreme class imbalance,
+        utilizing supervised machine learning models to maximize fraud recall while minimizing false positives.
+    </p>
+
+    <div class="hero-actions">
+        <a href="{{ url_for('predict') }}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-magnifying-glass"></i> Analyze Transaction
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-lg">
+            <i class="fa-solid fa-chart-column"></i> View Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Live Real Statistics Grid -->
+<div class="container stats-container">
+    <div class="section-header text-center">
+        <h3><i class="fa-solid fa-database"></i> Verified Dataset & Model Statistics</h3>
+        <p class="section-subtext">Actual metrics computed from the historical 284,807 credit card transactions</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="fa-solid fa-credit-card"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Total Transactions</span>
+                <span class="stat-value">{{ "{:,}".format(eda_summary.get('total_records', 284807)) }}</span>
+                <span class="stat-note">Historical records</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="fa-solid fa-check-double"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Legitimate Transactions</span>
+                <span class="stat-value">{{ "{:,}".format(eda_summary.get('legitimate_count', 284315)) }}</span>
+                <span class="stat-note">{{ eda_summary.get('legit_percentage', 99.8273) }}% of dataset</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Fraudulent Transactions</span>
+                <span class="stat-value">{{ "{:,}".format(eda_summary.get('fraud_count', 492)) }}</span>
+                <span class="stat-note">Only {{ eda_summary.get('fraud_percentage', 0.1727) }}% (Imbalance)</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-purple"><i class="fa-solid fa-brain"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Selected Model</span>
+                <span class="stat-value" style="font-size: 1.25rem;">{{ model_metrics.get('selected_model', 'Random Forest Classifier') }}</span>
+                <span class="stat-note">F1: {{ model_metrics.get('models', {}).get('random_forest', {}).get('f1_score', 0.7678) }} | ROC: {{ model_metrics.get('models', {}).get('random_forest', {}).get('roc_auc', 0.979) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Architecture & Pipeline Flow -->
+<div class="container architecture-section">
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-network-wired"></i> System End-to-End Architecture</h3>
+        </div>
+        <div class="card-body">
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="flow-step-num">1</div>
+                    <div class="flow-step-icon"><i class="fa-solid fa-user"></i></div>
+                    <h5>User Input</h5>
+                    <p>Demo sample selection or manual parameter entry (Time, Amount, V1-V28)</p>
+                </div>
+                <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+                <div class="flow-step">
+                    <div class="flow-step-num">2</div>
+                    <div class="flow-step-icon"><i class="fa-brands fa-python"></i></div>
+                    <h5>Flask Backend</h5>
+                    <p>Input validation, data type verification, and request routing</p>
+                </div>
+                <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+                <div class="flow-step">
+                    <div class="flow-step-num">3</div>
+                    <div class="flow-step-icon"><i class="fa-solid fa-sliders"></i></div>
+                    <h5>StandardScaler</h5>
+                    <p>Feature normalization fitted strictly on training data (Zero Data Leakage)</p>
+                </div>
+                <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+                <div class="flow-step">
+                    <div class="flow-step-num">4</div>
+                    <div class="flow-step-icon"><i class="fa-solid fa-tree"></i></div>
+                    <h5>Random Forest</h5>
+                    <p>Ensemble inference with balanced weights to handle class imbalance</p>
+                </div>
+                <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+                <div class="flow-step">
+                    <div class="flow-step-num">5</div>
+                    <div class="flow-step-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <h5>Risk Verdict</h5>
+                    <p>Legitimate vs Fraud classification with probability risk score</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Educational Viva Notes -->
+<div class="container viva-preview-section">
+    <div class="grid-2col">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fa-solid fa-circle-question"></i> Why Not Rely Solely on Accuracy?</h4>
+            </div>
+            <div class="card-body">
+                <p>
+                    Because <strong>99.83%</strong> of all transactions in this dataset are legitimate,
+                    a naive "dummy" model that predicts every single transaction is legitimate would achieve
+                    an impressive <strong>99.83% accuracy</strong> while failing to catch <em>any</em> fraud!
+                </p>
+                <p>
+                    In financial fraud detection, <strong>Recall</strong> (Sensitivity) is paramount because
+                    failing to catch a fraud (False Negative) results in direct financial loss. Meanwhile,
+                    <strong>Precision</strong> ensures legitimate users are not inundated with false card declines.
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fa-solid fa-shield-cat"></i> Why Random Forest over Logistic Regression?</h4>
+            </div>
+            <div class="card-body">
+                <p>
+                    While Logistic Regression achieved a high Recall (91.84%), its Precision was only <strong>6.10%</strong>,
+                    generating <strong>1,386 false alarms</strong> on the test set.
+                </p>
+                <p>
+                    The <strong>Random Forest Classifier</strong> achieved a much superior balance:
+                    <strong>82.65% Recall</strong> with <strong>71.68% Precision</strong>, cutting false alarms down to
+                    only <strong>32</strong> and yielding an <strong>F1-Score of 0.7678</strong> (compared to 0.1144).
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

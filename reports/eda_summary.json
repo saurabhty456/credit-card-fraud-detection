@@ -1,0 +1,23 @@
+{
+    "total_records": 284807,
+    "missing_values": 0,
+    "duplicate_rows": 1081,
+    "legitimate_count": 284315,
+    "fraud_count": 492,
+    "fraud_percentage": 0.1727,
+    "legit_percentage": 99.8273,
+    "amount_legit": {
+        "mean": 88.29,
+        "median": 22.0,
+        "std": 250.11,
+        "max": 25691.16,
+        "min": 0.0
+    },
+    "amount_fraud": {
+        "mean": 122.21,
+        "median": 9.25,
+        "std": 256.68,
+        "max": 2125.87,
+        "min": 0.0
+    }
+}

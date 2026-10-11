@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FraudGuard | Credit Card Fraud Detection{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Security/Banking Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Top Security & Educational Banner -->
+    <div class="top-banner">
+        <div class="container banner-content">
+            <span><i class="fa-solid fa-graduation-cap"></i> <strong>College Mini Project:</strong> Credit Card Fraud Detection using Machine Learning & Flask</span>
+            <span class="security-badge"><i class="fa-solid fa-shield-halved"></i> Educational Simulation Mode</span>
+        </div>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="brand-logo">
+                <div class="logo-icon"><i class="fa-solid fa-shield-virus"></i></div>
+                <div class="logo-text">
+                    <span class="brand-title">FRAUDGUARD</span>
+                    <span class="brand-subtitle">AI Transaction Security</span>
+                </div>
+            </a>
+            <nav class="nav-menu">
+                <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                    <i class="fa-solid fa-house"></i> Home
+                </a>
+                <a href="{{ url_for('predict') }}" class="nav-link {% if request.endpoint == 'predict' %}active{% endif %}">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i> Analyze Transaction
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+            </nav>
+            <div class="nav-action">
+                <a href="{{ url_for('predict') }}" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-bolt"></i> Live Analysis
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Flash Messages Container -->
+    <div class="container flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% if error_banner %}
+            <div class="alert alert-error">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>{{ error_banner }}</span>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Dynamic Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-col">
+                <div class="brand-logo footer-logo">
+                    <i class="fa-solid fa-shield-virus"></i>
+                    <span>FRAUDGUARD</span>
+                </div>
+                <p class="footer-desc">
+                    A machine learning application demonstrating imbalanced classification techniques,
+                    PCA feature modeling, and real-time transaction inference using Scikit-learn and Flask.
+                </p>
+            </div>
+            <div class="footer-col">
+                <h4>Architecture</h4>
+                <ul>
+                    <li><i class="fa-brands fa-python"></i> Python 3 & Scikit-learn</li>
+                    <li><i class="fa-solid fa-server"></i> Flask Web Application</li>
+                    <li><i class="fa-solid fa-tree"></i> Balanced Random Forest</li>
+                    <li><i class="fa-solid fa-chart-pie"></i> Matplotlib & Seaborn</li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Viva Discussion Topics</h4>
+                <ul>
+                    <li>Extreme Class Imbalance (0.17% Fraud)</li>
+                    <li>Why Precision & Recall beat Accuracy</li>
+                    <li>StandardScaler & Data Leakage Prevention</li>
+                    <li>Stratified Train/Test Split (80/20)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container bottom-flex">
+                <p>&copy; 2026 FraudGuard College Project. Strictly for educational & evaluation purposes.</p>
+                <p class="disclaimer"><i class="fa-solid fa-lock"></i> No real credit card, CVV, or personal bank details are ever collected.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

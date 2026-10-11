@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze Transaction | FraudGuard{% endblock %}
+
+{% block content %}
+<div class="container page-header">
+    <div class="header-tag"><i class="fa-solid fa-calculator"></i> Real-Time Inference</div>
+    <h2>Credit Card Transaction Analysis</h2>
+    <p class="header-subtitle">
+        Evaluate a transaction using our trained machine learning model. Choose a real test dataset sample (Mode 1)
+        or manually configure transaction attributes (Mode 2).
+    </p>
+</div>
+
+<!-- Ethical / Educational Notice -->
+<div class="container">
+    <div class="notice-card">
+        <div class="notice-icon"><i class="fa-solid fa-circle-info"></i></div>
+        <div class="notice-text">
+            <strong>Educational Demonstration Notice:</strong> This model analyzes anonymized numerical PCA features (V1–V28),
+            Transaction Time (seconds elapsed), and Transaction Amount (€).
+            <strong>We NEVER request or store real credit card numbers, CVV codes, PINs, or banking credentials.</strong>
+        </div>
+    </div>
+</div>
+
+<div class="container form-container">
+    <!-- MODE 1: Quick Sample Selector -->
+    <div class="card demo-selector-card">
+        <div class="card-header flex-header">
+            <div>
+                <h4><i class="fa-solid fa-wand-magic-sparkles"></i> Mode 1: Pre-fill Real Test Set Samples</h4>
+                <p class="card-subtitle">Quickly populate the form using verified records directly from the unseen test split.</p>
+            </div>
+            <span class="badge badge-accent">Recommended for Viva Demo</span>
+        </div>
+        <div class="card-body">
+            <div class="demo-buttons-grid">
+                <button type="button" class="demo-btn demo-btn-legit" onclick="loadSample('legitimate', 0)">
+                    <div class="demo-btn-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="demo-btn-text">
+                        <strong>Legitimate Sample A</strong>
+                        <span>Typical grocery / retail transaction (€29.90)</span>
+                    </div>
+                </button>
+
+                <button type="button" class="demo-btn demo-btn-legit" onclick="loadSample('legitimate', 1)">
+                    <div class="demo-btn-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="demo-btn-text">
+                        <strong>Legitimate Sample B</strong>
+                        <span>Standard payment transaction (€77.05)</span>
+                    </div>
+                </button>
+
+                <button type="button" class="demo-btn demo-btn-fraud" onclick="loadSample('fraud', 0)">
+                    <div class="demo-btn-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
+                    <div class="demo-btn-text">
+                        <strong>Fraud Sample A</strong>
+                        <span>Compromised card profile (€1.00 micro-probe)</span>
+                    </div>
+                </button>
+
+                <button type="button" class="demo-btn demo-btn-fraud" onclick="loadSample('fraud', 1)">
+                    <div class="demo-btn-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
+                    <div class="demo-btn-text">
+                        <strong>Fraud Sample B</strong>
+                        <span>High-anomaly unauthorized charge (€239.93)</span>
+                    </div>
+                </button>
+            </div>
+            <div id="sampleNotice" class="sample-loaded-banner" style="display: none;">
+                <i class="fa-solid fa-check"></i> <span id="sampleNoticeText">Sample loaded into form</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODE 2: Manual Feature Configuration & Form Submission -->
+    <div class="card main-form-card">
+        <div class="card-header flex-header">
+            <div>
+                <h4><i class="fa-solid fa-sliders"></i> Mode 2: Transaction Parameters</h4>
+                <p class="card-subtitle">Verify or manually edit the 30 numerical model features below.</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="resetForm()">
+                <i class="fa-solid fa-rotate-left"></i> Reset Form
+            </button>
+        </div>
+
+        <form action="{{ url_for('predict') }}" method="POST" id="transactionForm" onsubmit="return validateForm()">
+            <div class="card-body">
+                <!-- Primary Features: Time and Amount -->
+                <div class="primary-inputs-grid">
+                    <div class="form-group highlight-group">
+                        <label for="Amount">
+                            <i class="fa-solid fa-euro-sign"></i> Transaction Amount (€)
+                            <span class="required">*</span>
+                        </label>
+                        <input type="number" step="any" class="form-control form-control-lg" id="Amount" name="Amount" placeholder="e.g. 85.50" required>
+                        <small class="form-hint">Dataset Range: €0.00 – €25,691.16</small>
+                    </div>
+
+                    <div class="form-group highlight-group">
+                        <label for="Time">
+                            <i class="fa-solid fa-clock"></i> Elapsed Time (Seconds)
+                            <span class="required">*</span>
+                        </label>
+                        <input type="number" step="any" class="form-control form-control-lg" id="Time" name="Time" placeholder="e.g. 54200" required>
+                        <small class="form-hint">Seconds elapsed since initial dataset transaction (0 – 172,792s)</small>
+                    </div>
+                </div>
+
+                <!-- Secondary Features: V1 through V28 (PCA Anonymized) -->
+                <div class="pca-section">
+                    <div class="pca-header" onclick="togglePcaSection()">
+                        <div class="pca-title">
+                            <i class="fa-solid fa-layer-group"></i> PCA Anonymized Features (V1 – V28)
+                            <span class="badge badge-info">30 total features</span>
+                        </div>
+                        <div class="pca-toggle-btn">
+                            <span id="pcaToggleText">Collapse Details</span>
+                            <i class="fa-solid fa-chevron-up" id="pcaToggleIcon"></i>
+                        </div>
+                    </div>
+                    <p class="pca-info">
+                        <em>Note for Viva:</em> Features V1 through V28 are the principal components obtained through
+                        <strong>Principal Component Analysis (PCA)</strong> to protect customer privacy and confidential financial data.
+                    </p>
+
+                    <div class="pca-inputs-grid" id="pcaInputsGrid">
+                        {% for i in range(1, 29) %}
+                        {% set feat = 'V' ~ i %}
+                        <div class="form-group pca-group">
+                            <label for="{{ feat }}">{{ feat }}</label>
+                            <input type="number" step="any" class="form-control pca-input" id="{{ feat }}" name="{{ feat }}" placeholder="0.0" value="0.0" required>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Submission Action -->
+                <div class="form-action-area">
+                    <button type="submit" class="btn btn-primary btn-xl submit-btn">
+                        <i class="fa-solid fa-shield-virus"></i> ANALYZE TRANSACTION
+                    </button>
+                    <p class="action-subtext">The transaction vector will be scaled via StandardScaler and evaluated by the Random Forest model.</p>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Embedded real sample transactions from unseen test split
+    const realSamples = {{ sample_transactions | tojson | safe }};
+
+    function loadSample(type, index) {
+        if (!realSamples) return;
+        const list = type === 'legitimate' ? realSamples.legitimate_samples : realSamples.fraud_samples;
+        if (!list || !list[index]) return;
+
+        const sample = list[index];
+        const features = sample.features;
+
+        // Populate all fields
+        for (const [key, value] of Object.entries(features)) {
+            const input = document.getElementById(key);
+            if (input) {
+                input.value = parseFloat(value).toFixed(5);
+            }
+        }
+
+        // Show confirmation badge
+        const banner = document.getElementById('sampleNotice');
+        const bannerText = document.getElementById('sampleNoticeText');
+        banner.style.display = 'block';
+        banner.className = 'sample-loaded-banner ' + (type === 'legitimate' ? 'banner-legit' : 'banner-fraud');
+        bannerText.innerHTML = `Loaded <strong>${sample.label} Test Record</strong> (Row index: #${sample.index}, Amount: €${sample.amount.toFixed(2)}, Time: ${sample.time.toFixed(0)}s). Ready for analysis!`;
+
+        // Smooth scroll to submit button
+        banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function resetForm() {
+        document.getElementById('transactionForm').reset();
+        document.getElementById('sampleNotice').style.display = 'none';
+        for (let i = 1; i <= 28; i++) {
+            const el = document.getElementById('V' + i);
+            if (el) el.value = "0.0";
+        }
+    }
+
+    function togglePcaSection() {
+        const grid = document.getElementById('pcaInputsGrid');
+        const icon = document.getElementById('pcaToggleIcon');
+        const text = document.getElementById('pcaToggleText');
+
+        if (grid.style.display === 'none') {
+            grid.style.display = 'grid';
+            icon.className = 'fa-solid fa-chevron-up';
+            text.innerText = 'Collapse Details';
+        } else {
+            grid.style.display = 'none';
+            icon.className = 'fa-solid fa-chevron-down';
+            text.innerText = 'Expand 28 PCA Features';
+        }
+    }
+
+    function validateForm() {
+        const amount = document.getElementById('Amount').value;
+        const time = document.getElementById('Time').value;
+
+        if (amount === "" || isNaN(amount) || parseFloat(amount) < 0) {
+            alert("Please enter a valid non-negative transaction amount.");
+            document.getElementById('Amount').focus();
+            return false;
+        }
+
+        if (time === "" || isNaN(time) || parseFloat(time) < 0) {
+            alert("Please enter a valid non-negative time value.");
+            document.getElementById('Time').focus();
+            return false;
+        }
+
+        return true;
+    }
+
+    // Default: load Legitimate Sample 0 on initial page visit for easy demonstration
+    window.addEventListener('DOMContentLoaded', () => {
+        loadSample('legitimate', 0);
+    });
+</script>
+{% endblock %}

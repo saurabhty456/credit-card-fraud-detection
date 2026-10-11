@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Model Dashboard | FraudGuard{% endblock %}
+
+{% block content %}
+<div class="container page-header">
+    <div class="header-tag"><i class="fa-solid fa-chart-pie"></i> Performance Analytics</div>
+    <h2>Machine Learning Evaluation Dashboard</h2>
+    <p class="header-subtitle">
+        Empirical evaluation metrics and visualizations derived from the historical European cardholder dataset
+        and unseen test evaluation split.
+    </p>
+</div>
+
+<!-- Key Performance Indicators (KPIs) -->
+<div class="container kpi-section">
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-title">Accuracy</span>
+            <span class="kpi-number">{{ "%.2f"|format(model_metrics.get('models', {}).get('random_forest', {}).get('accuracy', 0.9991) * 100) }}%</span>
+            <span class="kpi-sub">Test set overall correctness</span>
+        </div>
+
+        <div class="kpi-card highlight-kpi">
+            <span class="kpi-title">Precision (Fraud)</span>
+            <span class="kpi-number text-success">{{ "%.2f"|format(model_metrics.get('models', {}).get('random_forest', {}).get('precision', 0.7168) * 100) }}%</span>
+            <span class="kpi-sub">Minimizes false alarms (Only 32 FP)</span>
+        </div>
+
+        <div class="kpi-card highlight-kpi">
+            <span class="kpi-title">Recall / Sensitivity</span>
+            <span class="kpi-number text-primary">{{ "%.2f"|format(model_metrics.get('models', {}).get('random_forest', {}).get('recall', 0.8265) * 100) }}%</span>
+            <span class="kpi-sub">Caught 81 of 98 fraud cases</span>
+        </div>
+
+        <div class="kpi-card">
+            <span class="kpi-title">F1-Score</span>
+            <span class="kpi-number">{{ "%.4f"|format(model_metrics.get('models', {}).get('random_forest', {}).get('f1_score', 0.7678)) }}</span>
+            <span class="kpi-sub">Harmonic mean of P & R</span>
+        </div>
+
+        <div class="kpi-card">
+            <span class="kpi-title">ROC-AUC Score</span>
+            <span class="kpi-number">{{ "%.4f"|format(model_metrics.get('models', {}).get('random_forest', {}).get('roc_auc', 0.9790)) }}</span>
+            <span class="kpi-sub">Discriminative capability</span>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Table: Logistic Regression vs Random Forest -->
+<div class="container table-section">
+    <div class="card">
+        <div class="card-header flex-header">
+            <div>
+                <h4><i class="fa-solid fa-scale-balanced"></i> Model Comparison on Unseen Test Set (56,962 Transactions)</h4>
+                <p class="card-subtitle">Direct empirical comparison between baseline and ensemble classifier.</p>
+            </div>
+            <span class="badge badge-accent">Selected: Random Forest</span>
+        </div>
+        <div class="card-body no-padding">
+            <div class="table-responsive">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Model Architecture</th>
+                            <th>Accuracy</th>
+                            <th>Precision (Class 1)</th>
+                            <th>Recall (Class 1)</th>
+                            <th>F1-Score</th>
+                            <th>ROC-AUC</th>
+                            <th>False Positives (FP)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set lr = model_metrics.get('models', {}).get('logistic_regression', {}) %}
+                        {% set rf = model_metrics.get('models', {}).get('random_forest', {}) %}
+                        <tr>
+                            <td>
+                                <strong>Logistic Regression</strong><br>
+                                <small class="text-muted">Balanced Class Weight (LBFGS)</small>
+                            </td>
+                            <td>{{ "%.4f"|format(lr.get('accuracy', 0.9755)) }}</td>
+                            <td>{{ "%.4f"|format(lr.get('precision', 0.0610)) }} (6.1%)</td>
+                            <td><strong class="text-success">{{ "%.4f"|format(lr.get('recall', 0.9184)) }} (91.8%)</strong></td>
+                            <td>{{ "%.4f"|format(lr.get('f1_score', 0.1144)) }}</td>
+                            <td>{{ "%.4f"|format(lr.get('roc_auc', 0.9721)) }}</td>
+                            <td><span class="text-danger font-bold">{{ "{:,}".format(lr.get('false_positives', 1386)) }}</span></td>
+                            <td><span class="badge badge-warning">High False Alarms</span></td>
+                        </tr>
+                        <tr class="selected-row">
+                            <td>
+                                <strong>Random Forest Classifier</strong><br>
+                                <small class="text-muted">100 Trees, Balanced Weights, Depth 12</small>
+                            </td>
+                            <td><strong>{{ "%.4f"|format(rf.get('accuracy', 0.9991)) }}</strong></td>
+                            <td><strong class="text-success">{{ "%.4f"|format(rf.get('precision', 0.7168)) }} (71.7%)</strong></td>
+                            <td><strong>{{ "%.4f"|format(rf.get('recall', 0.8265)) }} (82.7%)</strong></td>
+                            <td><strong class="text-success">{{ "%.4f"|format(rf.get('f1_score', 0.7678)) }}</strong></td>
+                            <td><strong class="text-success">{{ "%.4f"|format(rf.get('roc_auc', 0.9790)) }}</strong></td>
+                            <td><span class="text-success font-bold">{{ rf.get('false_positives', 32) }}</span></td>
+                            <td><span class="badge badge-success"><i class="fa-solid fa-check"></i> Best Model</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Visual Charts Grid -->
+<div class="container plots-section">
+    <div class="section-header">
+        <h3><i class="fa-solid fa-images"></i> Generated Visualizations & Evaluation Charts</h3>
+        <p class="section-subtext">Plots rendered using Matplotlib and Seaborn directly from the dataset analysis</p>
+    </div>
+
+    <div class="plots-grid">
+        <!-- Plot 1: Confusion Matrices -->
+        <div class="plot-card">
+            <div class="plot-card-header">
+                <h5><i class="fa-solid fa-table-cells-large"></i> Confusion Matrices (LR vs RF)</h5>
+            </div>
+            <div class="plot-img-container">
+                <img src="{{ url_for('static', filename='img/plots/confusion_matrices.png') }}" alt="Confusion Matrices" loading="lazy">
+            </div>
+            <div class="plot-caption">
+                Random Forest cut false alarms from <strong>1,386 down to 32</strong> while capturing 81 of 98 fraud cases.
+            </div>
+        </div>
+
+        <!-- Plot 2: ROC Curves -->
+        <div class="plot-card">
+            <div class="plot-card-header">
+                <h5><i class="fa-solid fa-bezier-curve"></i> ROC Curves Comparison</h5>
+            </div>
+            <div class="plot-img-container">
+                <img src="{{ url_for('static', filename='img/plots/roc_curves.png') }}" alt="ROC Curves" loading="lazy">
+            </div>
+            <div class="plot-caption">
+                Random Forest achieves an AUC of <strong>0.9790</strong>, closely tracking near the upper-left boundary.
+            </div>
+        </div>
+
+        <!-- Plot 3: Model Metrics Comparison -->
+        <div class="plot-card">
+            <div class="plot-card-header">
+                <h5><i class="fa-solid fa-chart-bar"></i> Performance Metrics Comparison</h5>
+            </div>
+            <div class="plot-img-container">
+                <img src="{{ url_for('static', filename='img/plots/model_comparison.png') }}" alt="Model Comparison" loading="lazy">
+            </div>
+            <div class="plot-caption">
+                Side-by-side comparison across Accuracy, Precision, Recall, F1-Score, and ROC-AUC.
+            </div>
+        </div>
+
+        <!-- Plot 4: Class Distribution -->
+        <div class="plot-card">
+            <div class="plot-card-header">
+                <h5><i class="fa-solid fa-scale-unbalanced"></i> Dataset Class Imbalance (Log Scale)</h5>
+            </div>
+            <div class="plot-img-container">
+                <img src="{{ url_for('static', filename='img/plots/class_distribution.png') }}" alt="Class Distribution" loading="lazy">
+            </div>
+            <div class="plot-caption">
+                284,315 legitimate transactions vs only 492 fraud cases (0.1727% fraud prevalence).
+            </div>
+        </div>
+
+        <!-- Plot 5: Correlation Features -->
+        <div class="plot-card">
+            <div class="plot-card-header">
+                <h5><i class="fa-solid fa-diagram-project"></i> Features Most Correlated with Fraud</h5>
+            </div>
+            <div class="plot-img-container">
+                <img src="{{ url_for('static', filename='img/plots/correlation_features.png') }}" alt="Correlation Features" loading="lazy">
+            </div>
+            <div class="plot-caption">
+                Components V17, V14, V12 show the strongest negative correlation; V4 and V11 show positive correlation.
+            </div>
+        </div>
+
+        <!-- Plot 6: Amount Distribution -->
+        <div class="plot-card">
+            <div class="plot-card-header">
+                <h5><i class="fa-solid fa-money-bill-wave"></i> Transaction Amount Distributions</h5>
+            </div>
+            <div class="plot-img-container">
+                <img src="{{ url_for('static', filename='img/plots/amount_distribution.png') }}" alt="Amount Distribution" loading="lazy">
+            </div>
+            <div class="plot-caption">
+                Legitimate mean amount is €88.29; fraud mean amount is €122.21, with heavy clustering at lower values.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Viva Discussion Q&A Cards -->
+<div class="container viva-full-section">
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="fa-solid fa-graduation-cap"></i> Essential College Viva Defense Questions & Answers</h4>
+        </div>
+        <div class="card-body">
+            <div class="viva-accordion">
+                <div class="viva-item">
+                    <h5>1. What is the fundamental problem of Class Imbalance in fraud detection?</h5>
+                    <p>
+                        In our dataset, only 492 out of 284,807 transactions (0.17%) are fraudulent. Standard loss functions
+                        optimize for total overall accuracy. A model predicting <em>every transaction as normal</em> would
+                        trivially score 99.83% accuracy while failing 100% of its fraud-detection duties. Therefore, we use
+                        balanced class weights and evaluate on Precision, Recall, and F1-score.
+                    </p>
+                </div>
+                <div class="viva-item">
+                    <h5>2. What is Data Leakage and how did we prevent it?</h5>
+                    <p>
+                        Data leakage occurs when information from outside the training dataset (such as test set statistics)
+                        influences model training. We strictly performed our <code>train_test_split</code> <em>before</em> any
+                        scaling, fitting the <code>StandardScaler</code> solely on the training data, and then transforming the
+                        test set using those learned training parameters.
+                    </p>
+                </div>
+                <div class="viva-item">
+                    <h5>3. Why did we select Random Forest over Logistic Regression?</h5>
+                    <p>
+                        While Logistic Regression achieved high recall (91.84%), its linear decision boundary suffered
+                        from severe False Positives (1,386 false alarms, 6.10% precision). In contrast, Random Forest's
+                        non-linear ensemble decision trees captured fraud with 82.65% recall and 71.68% precision, cutting
+                        false alarms down to 32 and lifting the F1-score from 0.1144 to 0.7678.
+                    </p>
+                </div>
+                <div class="viva-item">
+                    <h5>4. Why are features V1 through V28 anonymized?</h5>
+                    <p>
+                        Real credit card data contains sensitive personal and financial identifiers (names, card numbers, locations,
+                        merchant codes). The original dataset providers applied <strong>Principal Component Analysis (PCA)</strong>
+                        dimensionality reduction to project the data into orthogonal eigenvectors (V1 to V28), preserving statistical
+                        variance without revealing sensitive cardholder details.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

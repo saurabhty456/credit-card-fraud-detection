@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+.venv
+env/
+venv/
+ENV/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Exclude large raw dataset CSV from git to prevent exceeding GitHub 100MB limit
+# (The trained models in models/ are self-contained and run inference independently)
+dataset/*.csv

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction Result | FraudGuard{% endblock %}
+
+{% block content %}
+<div class="container result-wrapper">
+    <!-- Main Result Card -->
+    <div class="card result-card result-card-{{ result.risk_class }}">
+        <div class="result-header">
+            <div class="result-icon-bubble bubble-{{ result.risk_class }}">
+                {% if result.prediction == 1 %}
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                {% else %}
+                    <i class="fa-solid fa-shield-check"></i>
+                {% endif %}
+            </div>
+            <div class="result-status-title">{{ result.status_title }}</div>
+            <div class="risk-badge risk-badge-{{ result.risk_class }}">
+                Risk Level: <strong>{{ result.risk_level }}</strong>
+            </div>
+            <p class="result-message">{{ result.message }}</p>
+        </div>
+
+        <div class="result-metrics-panel">
+            <div class="probability-metric">
+                <div class="prob-header">
+                    <span>Model Estimated Fraud Risk Probability</span>
+                    <span class="prob-percentage">{{ result.fraud_probability }}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-{{ result.risk_class }}" style="width: {{ result.fraud_probability }}%;"></div>
+                </div>
+                <small class="prob-note">
+                    <i class="fa-solid fa-info-circle"></i> Estimated by Random Forest tree voting probability. Uncalibrated decision score; not a guaranteed certitude.
+                </small>
+            </div>
+
+            <!-- Transaction Summary Table -->
+            <div class="transaction-summary-box">
+                <h5><i class="fa-solid fa-receipt"></i> Transaction Parameters Evaluated</h5>
+                <div class="summary-details-grid">
+                    <div class="summary-item">
+                        <span class="item-label">Transaction Amount</span>
+                        <span class="item-value">€{{ "%.2f"|format(result.amount) }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Elapsed Time</span>
+                        <span class="item-value">{{ "%.1f"|format(result.time) }} seconds</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Features Processed</span>
+                        <span class="item-value">30 Scaled Variables</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Inference Model</span>
+                        <span class="item-value">{{ result.model_name }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Educational / Compliance Note -->
+            <div class="disclaimer-callout">
+                <h6><i class="fa-solid fa-graduation-cap"></i> Academic & Ethical Demonstration Note:</h6>
+                <p>
+                    Machine learning predictions are statistical estimations based on historical training distributions.
+                    In production banking environments, an elevated risk score triggers secondary automated workflows
+                    (e.g., 3D Secure OTP verification, temporary authorization holds, or human investigator queues)
+                    rather than outright transaction termination without recourse.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="result-actions">
+                <a href="{{ url_for('predict') }}" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-rotate-left"></i> Analyze Another Transaction
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-lg">
+                    <i class="fa-solid fa-chart-line"></i> View Model Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
